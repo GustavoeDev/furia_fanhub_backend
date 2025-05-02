@@ -79,10 +79,12 @@ class UserView(APIView):
         avatar = request.FILES.get('avatar')
         
         data = {
-            'name_user': name_user,
-            'email': email,
             'avatar': request.user.avatar
         }
+        if name_user:
+            data['name_user'] = name_user
+        if email:
+            data['email'] = email
         
         # Update avatar
         if avatar:

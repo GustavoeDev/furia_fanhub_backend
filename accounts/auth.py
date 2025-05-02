@@ -1,5 +1,5 @@
 from .models import User
-from django.contrib.auth.handlers import check_password
+from django.contrib.auth.hashers import check_password
 
 class Authentication:
     def signin(self, email: str, password: str) -> User | bool:
