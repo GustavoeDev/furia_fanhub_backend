@@ -10,6 +10,11 @@ class CompetitionSimpleSerializer(serializers.ModelSerializer):
         model = Competition
         fields = ['id', 'name', 'start_date', 'end_date', 'location']
 
+class TeamSimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = ['id', 'name', 'logo']
+
 class MatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Match
@@ -34,7 +39,7 @@ class TeamSerializer(serializers.ModelSerializer):
         return data
     
 class CompetitionSerializer(serializers.ModelSerializer):
-    teams = TeamSerializer(many=True, read_only=True)
+    teams = TeamSimpleSerializer(many=True, read_only=True)
     
     class Meta:
         model = Competition
