@@ -2,14 +2,16 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 
+from django.utils import timezone
+
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 
-from competitions.serializers import TeamSerializer, CompetitionSerializer
+from competitions.serializers import MatchSerializer, TeamSerializer, CompetitionSerializer
 from .utils.generate_random_matches import generate_real_matches 
 from core.utils.exceptions import ValidationError
 
-from .models import Competition, Team
+from .models import Competition, Match, Team
 
 import uuid
 
@@ -164,6 +166,43 @@ class CompetitionView(APIView):
         return Response({
             "message": "Lista de times atualizada com sucesso."
         })
+    
+class MatchesView(APIView):
+    def get(self, request, competition_id, match_id=None):
+        if match_id:
+            match_id = int(match_id)
+            try:
+                match = Match.objects.get(id=match_id)
+                
+                now = timezone.now()
+                
+                if match.start_time and not match.end_time:
+                    if match.start_time <= now and match.status != 'ongoing':
+                        match.status = 'ongoing'
+                        match.save()
+                elif match.end_time and match.status != 'completed':
+                        match.status = 'completed'
+                        match.save()
+
+            except Match.DoesNotExist:
+                raise ValidationError("Partida não encontrada.")
+            
+            serializer = MatchSerializer(match)
+            return Response(serializer.data)
+        
+        else:
+            competition = Competition.objects.filter(id=competition_id).first()
+
+            if not competition:
+                raise ValidationError('Competição não encontrada.')
+
+            matches = Match.objects.all().filter(competition=competition)
+
+            if not matches:
+                raise ValidationError('Essa competição não tem partidas.')
+            
+            serializer = MatchSerializer(matches, many=True)
+            return Response(serializer.data)
     
 class GenerateMatchesView(APIView):
     def get_permissions(self):
