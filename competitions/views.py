@@ -7,7 +7,9 @@ from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 
+from chats.models import Chat
 from competitions.serializers import MatchSerializer, TeamSerializer, CompetitionSerializer
+from core import socket
 from .utils.generate_random_matches import generate_real_matches 
 from core.utils.exceptions import ValidationError
 
@@ -173,6 +175,7 @@ class MatchesView(APIView):
             match_id = int(match_id)
             try:
                 match = Match.objects.get(id=match_id)
+                chat = Chat.objects.filter(match=match).first()
                 
                 now = timezone.now()
                 
@@ -180,9 +183,22 @@ class MatchesView(APIView):
                     if match.start_time <= now and match.status != 'ongoing':
                         match.status = 'ongoing'
                         match.save()
+
+                        socket.emit('update_chats', {
+                            'match_id': match.id,
+                            'status': match.status,
+                        })
+
                 elif match.end_time and match.status != 'completed':
                         match.status = 'completed'
+                        chat.finished_at = now
+                        chat.save()
                         match.save()
+
+                        socket.emit('update_chats', {
+                            'match_id': match.id,
+                            'status': match.status,
+                        })
 
             except Match.DoesNotExist:
                 raise ValidationError("Partida não encontrada.")

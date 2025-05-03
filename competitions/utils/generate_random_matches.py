@@ -1,7 +1,9 @@
 from itertools import combinations
 from datetime import datetime, timedelta
-from competitions.models import Match, Team, Competition
+from competitions.models import Match, Competition
 import random
+
+from chats.models import Chat
 
 def generate_real_matches(competition_id):
     competition = Competition.objects.get(id=competition_id)
@@ -25,6 +27,10 @@ def generate_real_matches(competition_id):
             map_played=random.choice(['mirage', 'inferno', 'nuke', 'overpass', 'dust_2', 'train', 'vertigo', 'ancient']),  
             start_time=start_time,
             status='pending' 
+        )
+
+        Chat.objects.create(
+            match=match,
         )
 
         matches.append(match)

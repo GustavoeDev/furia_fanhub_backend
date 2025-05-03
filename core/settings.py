@@ -35,6 +35,7 @@ INSTALLED_APPS = [
 
     'accounts',
     'competitions',
+    'chats',
 
     # Rest Framework
     'rest_framework',
