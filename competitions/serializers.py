@@ -8,14 +8,30 @@ from django.db.models import Q
 class CompetitionSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition
-        fields = ['id', 'name', 'start_date', 'end_date', 'location']
+        fields = ['id', 'name', 'start_date', 'logo', 'end_date', 'location']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['logo'] = f"{settings.CURRENT_URL}{instance.logo}"
+
+        return data
 
 class TeamSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
         fields = ['id', 'name', 'logo']
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['logo'] = f"{settings.CURRENT_URL}{instance.logo}"
+
+        return data
+
 class MatchSerializer(serializers.ModelSerializer):
+    competition = CompetitionSimpleSerializer(read_only=True)
+    team_1 = TeamSimpleSerializer(read_only=True)
+    team_2 = TeamSimpleSerializer(read_only=True)
+
     class Meta:
         model = Match
         fields = ['id', 'competition', 'team_1', 'team_2', 'score_team_1', 'score_team_2', 'map_played', 'round_number', 'start_time', 'end_time', 'status']
